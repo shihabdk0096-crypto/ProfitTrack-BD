@@ -18,6 +18,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double _totalInvest = 0.0;
   double _totalMonthlyProfit = 0.0;
   double _totalCollateralValue = 0.0;
+  String _selectedTab = "all";
 
   @override
   void initState() {
@@ -61,21 +62,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (!mounted) return;
     if (item.phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("গ্রাহকের মোবাইল নম্বর যুক্ত করা নেই!")),
+        const SnackBar(content: Text("গ্রাহকের মোবাইল নম্বর নেই!")),
       );
       return;
     }
 
-    final message = "সম্মানিত গ্রাহক ${item.title}, আপনার ঋণ হিসাবের মাসিক মুনাফা ৳${item.monthlyProfit.toStringAsFixed(0)} দেওয়ার সময় হয়েছে। অনুগ্রহ করে অতিসত্বর পরিশোধ করুন। ধন্যবাদ।";
+    final message = "সম্মানিত গ্রাহক ${item.title}, আপনার ঋণের মাসিক মুনাফা ৳${item.monthlyProfit.toStringAsFixed(0)} বাকি রয়েছে। অতিসত্বর পরিশোধ করার অনুরোধ রইল।";
     final uri = Uri.parse("sms:${item.phone}?body=${Uri.encodeComponent(message)}");
 
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
-    } else {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("মেসেজ অ্যাপ চালু করা যায়নি")),
-      );
     }
   }
 
@@ -88,12 +84,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final totalPaying = item.monthlyProfit * selectedMonths;
           return AlertDialog(
             backgroundColor: AppTheme.surface,
-            title: Text("${item.title} - মুনাফা আদায়"),
+            title: Text("${item.title} - মুনাফা জমা"),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("মাসিক লাভ: ৳${item.monthlyProfit.toStringAsFixed(0)}"),
+                Text("মাসিক নির্ধারিত লাভ: ৳${item.monthlyProfit.toStringAsFixed(0)}"),
                 const SizedBox(height: 15),
                 const Text("কয় মাসের মুনাফা জমা দিচ্ছেন:"),
                 Row(
@@ -155,7 +151,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("টাকা প্রদানের খতিয়ান: ${item.title}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primary)),
+            Text("মুনাফা প্রদানের খতিয়ান: ${item.title}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primary)),
             const SizedBox(height: 12),
             logs.isEmpty
                 ? const Padding(padding: EdgeInsets.all(20), child: Center(child: Text("এখন পর্যন্ত কোনো মুনাফা জমা দেওয়া হয়নি।")))
@@ -167,9 +163,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         return Card(
                           margin: const EdgeInsets.only(bottom: 8),
                           child: ListTile(
-                            leading: const Icon(Icons.check_circle, color: Colors.cyanAccent),
-                            title: Text("পরিশোধ: ${log.monthCount} মাসের লাভ"),
-                            subtitle: Text("তারিখ: ${log.paymentDate}"),
+                            leading: const Icon(Icons.verified, color: Colors.cyanAccent),
+                            title: Text("পরিশোধ: ${log.monthCount} মাসের মুনাফা"),
+                            subtitle: Text("জমার তারিখ: ${log.paymentDate}"),
                             trailing: Text("৳${log.amount.toStringAsFixed(0)}", style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary)),
                           ),
                         );
@@ -185,6 +181,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _showAddDialog() {
     final titleController = TextEditingController();
     final phoneController = TextEditingController();
+    final addressController = TextEditingController();
     final amountController = TextEditingController();
     final rateController = TextEditingController(text: "10.0");
     final dateController = TextEditingController(text: DateTime.now().toString().substring(0, 10));
@@ -204,11 +201,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("নতুন ঋণ ও বন্ধকী হিসাব এন্ট্রি", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+              const Text("নতুন ঋণ ও জামানত এন্ট্রি", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
               const SizedBox(height: 15),
-              TextField(controller: titleController, decoration: const InputDecoration(labelText: "গ্রাহকের নাম *", border: OutlineInputBorder())),
+              TextField(controller: titleController, decoration: const InputDecoration(labelText: "ঋণগ্রহীতার নাম *", border: OutlineInputBorder())),
               const SizedBox(height: 10),
               TextField(controller: phoneController, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: "মোবাইল নম্বর *", border: OutlineInputBorder())),
+              const SizedBox(height: 10),
+              TextField(controller: addressController, decoration: const InputDecoration(labelText: "ঋণগ্রহীতার সম্পূর্ণ ঠিকানা *", border: OutlineInputBorder())),
               const SizedBox(height: 10),
               Row(
                 children: [
@@ -220,7 +219,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 10),
               TextField(controller: dateController, decoration: const InputDecoration(labelText: "ঋণ দেওয়ার তারিখ (YYYY-MM-DD)", border: OutlineInputBorder())),
               const SizedBox(height: 15),
-              const Text("জমা রাখা বন্ধকী পণ্যের বিবরণ", style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
+              const Text("বন্ধকী পণ্যের বিবরণ", style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               TextField(controller: itemController, decoration: const InputDecoration(labelText: "কী জমা রাখা হয়েছে (স্বর্ণ, জমি, ইত্যাদি)", border: OutlineInputBorder())),
               const SizedBox(height: 10),
@@ -228,7 +227,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Expanded(child: TextField(controller: qtyController, decoration: const InputDecoration(labelText: "পরিমাণ / ওজন (যেমন: ২ ভরি)", border: OutlineInputBorder()))),
                   const SizedBox(width: 10),
-                  Expanded(child: TextField(controller: valueController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: "বাজার মূল্য (৳)", border: OutlineInputBorder()))),
+                  Expanded(child: TextField(controller: valueController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: "বর্তমান বাজার দর (৳)", border: OutlineInputBorder()))),
                 ],
               ),
               const SizedBox(height: 20),
@@ -241,6 +240,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     final nav = Navigator.of(ctx);
                     final title = titleController.text.trim();
                     final phone = phoneController.text.trim();
+                    final address = addressController.text.trim();
                     final amount = double.tryParse(amountController.text) ?? 0.0;
                     final rate = double.tryParse(rateController.text) ?? 0.0;
                     final monthlyProfit = (amount * rate) / 100;
@@ -253,6 +253,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         TransactionItem(
                           title: title,
                           phone: phone,
+                          address: address,
                           amount: amount,
                           profitRate: rate,
                           monthlyProfit: monthlyProfit,
@@ -278,15 +279,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredList = _list.where((item) {
+      final isDue = _isOneMonthDue(item.startDate, item.lastPaymentDate);
+      if (_selectedTab == "due") return isDue;
+      if (_selectedTab == "regular") return !isDue;
+      return true;
+    }).toList();
+
     return Scaffold(
-      appBar: AppBar(title: Text(_currentIndex == 0 ? "ProfitTrack BD (বন্ধকী ও লেজার)" : "সেটিংস")),
+      appBar: AppBar(title: Text(_currentIndex == 0 ? "ProfitTrack BD (খতিয়ান)" : "সেটিংস ও ব্যাকআপ")),
       floatingActionButton: _currentIndex == 0
           ? FloatingActionButton.extended(
               backgroundColor: AppTheme.primary,
               foregroundColor: Colors.black,
               onPressed: _showAddDialog,
-              icon: const Icon(Icons.note_add),
-              label: const Text("নতুন ঋণ ও বন্ধক"),
+              icon: const Icon(Icons.person_add_alt_1),
+              label: const Text("নতুন ঋণ এন্ট্রি"),
             )
           : null,
       body: _currentIndex == 0
@@ -302,7 +310,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("মোট ঋণ বিতরণকৃত মূলধন", style: TextStyle(color: Colors.white70)),
+                      const Text("মোট বিতরণকৃত ঋণ মূলধন", style: TextStyle(color: Colors.white70)),
                       const SizedBox(height: 6),
                       Text("৳ ${_totalInvest.toStringAsFixed(2)}", style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.white)),
                       const Divider(color: Colors.white24, height: 25),
@@ -312,7 +320,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text("মাসিক লাভ পাওনা", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                              const Text("মাসিক মোট মুনাফা", style: TextStyle(color: Colors.white70, fontSize: 12)),
                               Text("+৳ ${_totalMonthlyProfit.toStringAsFixed(0)}", style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 16)),
                             ],
                           ),
@@ -328,10 +336,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-                const Text("গ্রাহকদের তালিকা ও বন্ধক বিবরণী", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                ..._list.map((item) {
+                const SizedBox(height: 16),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      ChoiceChip(
+                        label: Text("সকল ঋণ (${_list.length})"),
+                        selected: _selectedTab == "all",
+                        onSelected: (val) => setState(() => _selectedTab = "all"),
+                      ),
+                      const SizedBox(width: 8),
+                      ChoiceChip(
+                        label: const Text("⚠️ মুনাফা বকেয়া / পেন্ডিং"),
+                        selected: _selectedTab == "due",
+                        selectedColor: Colors.redAccent.withAlpha(50),
+                        onSelected: (val) => setState(() => _selectedTab = "due"),
+                      ),
+                      const SizedBox(width: 8),
+                      ChoiceChip(
+                        label: const Text("✅ নিয়মিত"),
+                        selected: _selectedTab == "regular",
+                        selectedColor: Colors.greenAccent.withAlpha(50),
+                        onSelected: (val) => setState(() => _selectedTab = "regular"),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...filteredList.map((item) {
                   final isDue = _isOneMonthDue(item.startDate, item.lastPaymentDate);
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
@@ -347,54 +380,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Text("ঋণ: ৳ ${item.amount.toStringAsFixed(0)}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                             ],
                           ),
-                          const SizedBox(height: 6),
-                          Text("তারিখ: ${item.startDate} | মাসিক লাভ: ৳${item.monthlyProfit.toStringAsFixed(0)} (${item.profitRate}%)", style: const TextStyle(fontSize: 13, color: Colors.white70)),
+                          const SizedBox(height: 4),
+                          if (item.address.isNotEmpty)
+                            Text("ঠিকানা: ${item.address}", style: const TextStyle(fontSize: 12, color: Colors.white60)),
+                          Text("ঋণের তারিখ: ${item.startDate} | লাভ: ৳${item.monthlyProfit.toStringAsFixed(0)}/মাস", style: const TextStyle(fontSize: 13, color: Colors.white70)),
                           const SizedBox(height: 6),
                           if (item.collateralItem.isNotEmpty)
                             Container(
-                              margin: const EdgeInsets.symmetric(vertical: 6),
-                              padding: const EdgeInsets.all(10),
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.amber.withAlpha(25),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: Colors.amber.withAlpha(60)),
+                                color: Colors.amber.withAlpha(20),
+                                borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.security, color: Colors.amberAccent, size: 20),
-                                  const SizedBox(width: 8),
+                                  const Icon(Icons.shield, color: Colors.amberAccent, size: 16),
+                                  const SizedBox(width: 6),
                                   Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text("জমা: ${item.collateralItem} (${item.collateralQuantity})", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                                        Text("বাজার মূল্য: ৳ ${item.collateralMarketValue.toStringAsFixed(0)}", style: const TextStyle(color: Colors.amberAccent, fontSize: 13, fontWeight: FontWeight.w600)),
-                                      ],
+                                    child: Text(
+                                      "জামানত: ${item.collateralItem} (${item.collateralQuantity}) | বাজারদর: ৳${item.collateralMarketValue.toStringAsFixed(0)}",
+                                      style: const TextStyle(fontSize: 12, color: Colors.amberAccent),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          Text("পরিশোধ করেছে: ${item.paidMonths} মাসের লাভ", style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold)),
-                          if (item.lastPaymentDate.isNotEmpty) Text("সর্বশেষ লাভ জমার তারিখ: ${item.lastPaymentDate}", style: const TextStyle(fontSize: 12, color: Colors.white60)),
+                          const SizedBox(height: 4),
+                          Text("পরিশোধিত: ${item.paidMonths} মাসের লাভ", style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold)),
+                          if (item.lastPaymentDate.isNotEmpty)
+                            Text("সর্বশেষ লাভ জমার তারিখ: ${item.lastPaymentDate}", style: const TextStyle(fontSize: 12, color: Colors.white60)),
                           const Divider(height: 20),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               if (isDue)
                                 ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade800, foregroundColor: Colors.white),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
                                   icon: const Icon(Icons.send_to_mobile, size: 16),
-                                  label: const Text("অটো SMS"),
+                                  label: const Text("বকেয়া SMS"),
                                   onPressed: () => _sendAutoReminderSMS(item),
                                 )
                               else
-                                const Text("✅ মেয়াদ রানিং", style: TextStyle(color: Colors.greenAccent, fontSize: 13)),
+                                const Text("✅ নিয়মিত পরিশোধিত", style: TextStyle(color: Colors.greenAccent, fontSize: 13)),
                               Row(
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.history, color: Colors.blueAccent),
-                                    tooltip: "খতিয়ান দেখুন",
+                                    icon: const Icon(Icons.receipt_long, color: Colors.cyanAccent),
+                                    tooltip: "জমার তারিখ তালিকা",
                                     onPressed: () => _showHistoryDialog(item),
                                   ),
                                   ElevatedButton(
@@ -426,8 +459,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         backgroundColor: AppTheme.surface,
         onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.account_balance_wallet), label: "খতিয়ান ও বন্ধক"),
-          NavigationDestination(icon: Icon(Icons.settings), label: "সেটিংস"),
+          NavigationDestination(icon: Icon(Icons.account_balance_wallet), label: "খতিয়ান ও জামানত"),
+          NavigationDestination(icon: Icon(Icons.cloud_sync), label: "ক্লাউড ব্যাকআপ"),
         ],
       ),
     );

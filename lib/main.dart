@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'core/theme.dart';
-import 'screens/dashboard_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,10 +13,10 @@ class ProfitTrackApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'ProfitTrack BD',
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: const DashboardScreen(),
+      home: const LoginScreen(),
     );
   }
 }

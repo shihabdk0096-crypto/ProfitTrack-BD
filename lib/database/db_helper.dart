@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -16,31 +17,28 @@ class PaymentLog {
     required this.monthCount,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'transactionId': transactionId,
-      'amount': amount,
-      'paymentDate': paymentDate,
-      'monthCount': monthCount,
-    };
-  }
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'transactionId': transactionId,
+    'amount': amount,
+    'paymentDate': paymentDate,
+    'monthCount': monthCount,
+  };
 
-  factory PaymentLog.fromMap(Map<String, dynamic> map) {
-    return PaymentLog(
-      id: map['id'],
-      transactionId: map['transactionId'],
-      amount: (map['amount'] as num).toDouble(),
-      paymentDate: map['paymentDate'] ?? '',
-      monthCount: map['monthCount'] ?? 1,
-    );
-  }
+  factory PaymentLog.fromMap(Map<String, dynamic> map) => PaymentLog(
+    id: map['id'],
+    transactionId: map['transactionId'],
+    amount: (map['amount'] as num).toDouble(),
+    paymentDate: map['paymentDate'] ?? '',
+    monthCount: map['monthCount'] ?? 1,
+  );
 }
 
 class TransactionItem {
   final int? id;
   final String title;
   final String phone;
+  final String address;
   final double amount;
   final double profitRate;
   final double monthlyProfit;
@@ -56,6 +54,7 @@ class TransactionItem {
     this.id,
     required this.title,
     this.phone = '',
+    this.address = '',
     required this.amount,
     required this.profitRate,
     required this.monthlyProfit,
@@ -68,41 +67,39 @@ class TransactionItem {
     this.note = '',
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'title': title,
-      'phone': phone,
-      'amount': amount,
-      'profitRate': profitRate,
-      'monthlyProfit': monthlyProfit,
-      'startDate': startDate,
-      'paidMonths': paidMonths,
-      'lastPaymentDate': lastPaymentDate,
-      'collateralItem': collateralItem,
-      'collateralQuantity': collateralQuantity,
-      'collateralMarketValue': collateralMarketValue,
-      'note': note,
-    };
-  }
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'title': title,
+    'phone': phone,
+    'address': address,
+    'amount': amount,
+    'profitRate': profitRate,
+    'monthlyProfit': monthlyProfit,
+    'startDate': startDate,
+    'paidMonths': paidMonths,
+    'lastPaymentDate': lastPaymentDate,
+    'collateralItem': collateralItem,
+    'collateralQuantity': collateralQuantity,
+    'collateralMarketValue': collateralMarketValue,
+    'note': note,
+  };
 
-  factory TransactionItem.fromMap(Map<String, dynamic> map) {
-    return TransactionItem(
-      id: map['id'],
-      title: map['title'] ?? '',
-      phone: map['phone'] ?? '',
-      amount: (map['amount'] as num).toDouble(),
-      profitRate: (map['profitRate'] as num).toDouble(),
-      monthlyProfit: (map['monthlyProfit'] as num).toDouble(),
-      startDate: map['startDate'] ?? '',
-      paidMonths: map['paidMonths'] ?? 0,
-      lastPaymentDate: map['lastPaymentDate'] ?? '',
-      collateralItem: map['collateralItem'] ?? '',
-      collateralQuantity: map['collateralQuantity'] ?? '',
-      collateralMarketValue: (map['collateralMarketValue'] as num?)?.toDouble() ?? 0.0,
-      note: map['note'] ?? '',
-    );
-  }
+  factory TransactionItem.fromMap(Map<String, dynamic> map) => TransactionItem(
+    id: map['id'],
+    title: map['title'] ?? '',
+    phone: map['phone'] ?? '',
+    address: map['address'] ?? '',
+    amount: (map['amount'] as num).toDouble(),
+    profitRate: (map['profitRate'] as num).toDouble(),
+    monthlyProfit: (map['monthlyProfit'] as num).toDouble(),
+    startDate: map['startDate'] ?? '',
+    paidMonths: map['paidMonths'] ?? 0,
+    lastPaymentDate: map['lastPaymentDate'] ?? '',
+    collateralItem: map['collateralItem'] ?? '',
+    collateralQuantity: map['collateralQuantity'] ?? '',
+    collateralMarketValue: (map['collateralMarketValue'] as num?)?.toDouble() ?? 0.0,
+    note: map['note'] ?? '',
+  );
 }
 
 class DBHelper {
@@ -119,16 +116,26 @@ class DBHelper {
   }
 
   Future<Database> _initDB() async {
-    String path = join(await getDatabasesPath(), 'profittrack_v5.db');
+    String path = join(await getDatabasesPath(), 'profittrack_v6.db');
     return await openDatabase(
       path,
       version: 1,
       onCreate: (db, version) async {
         await db.execute('''
+          CREATE TABLE auth(
+            id INTEGER PRIMARY KEY,
+            username TEXT,
+            password TEXT
+          )
+        ''');
+        await db.insert('auth', {'id': 1, 'username': 'admin', 'password': '1234'});
+
+        await db.execute('''
           CREATE TABLE transactions(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT,
             phone TEXT,
+            address TEXT,
             amount REAL,
             profitRate REAL,
             monthlyProfit REAL,
@@ -153,6 +160,17 @@ class DBHelper {
         ''');
       },
     );
+  }
+
+  Future<bool> verifyLogin(String user, String pass) async {
+    final db = await database;
+    final res = await db.query('auth', where: 'username = ? AND password = ?', whereArgs: [user, pass]);
+    return res.isNotEmpty;
+  }
+
+  Future<void> updatePassword(String newPass) async {
+    final db = await database;
+    await db.update('auth', {'password': newPass}, where: 'id = 1');
   }
 
   Future<int> insert(TransactionItem item) async {
@@ -208,5 +226,38 @@ class DBHelper {
     final db = await database;
     await db.delete('payment_logs');
     await db.delete('transactions');
+  }
+
+  Future<String> exportBackupJSON() async {
+    final db = await database;
+    final trans = await db.query('transactions');
+    final logs = await db.query('payment_logs');
+    final Map<String, dynamic> data = {
+      'version': 1,
+      'exported_at': DateTime.now().toIso8601String(),
+      'transactions': trans,
+      'payment_logs': logs,
+    };
+    return jsonEncode(data);
+  }
+
+  Future<bool> importBackupJSON(String jsonStr) async {
+    try {
+      final Map<String, dynamic> data = jsonDecode(jsonStr);
+      final db = await database;
+      await db.transaction((txn) async {
+        await txn.delete('payment_logs');
+        await txn.delete('transactions');
+        for (var t in data['transactions']) {
+          await txn.insert('transactions', Map<String, dynamic>.from(t));
+        }
+        for (var l in data['payment_logs']) {
+          await txn.insert('payment_logs', Map<String, dynamic>.from(l));
+        }
+      });
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }
