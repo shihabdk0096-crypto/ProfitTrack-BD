@@ -47,6 +47,9 @@ class TransactionItem {
   final String startDate;
   final int paidMonths;
   final String lastPaymentDate;
+  final String collateralItem;
+  final String collateralQuantity;
+  final double collateralMarketValue;
   final String note;
 
   TransactionItem({
@@ -59,6 +62,9 @@ class TransactionItem {
     required this.startDate,
     this.paidMonths = 0,
     this.lastPaymentDate = '',
+    this.collateralItem = '',
+    this.collateralQuantity = '',
+    this.collateralMarketValue = 0.0,
     this.note = '',
   });
 
@@ -73,6 +79,9 @@ class TransactionItem {
       'startDate': startDate,
       'paidMonths': paidMonths,
       'lastPaymentDate': lastPaymentDate,
+      'collateralItem': collateralItem,
+      'collateralQuantity': collateralQuantity,
+      'collateralMarketValue': collateralMarketValue,
       'note': note,
     };
   }
@@ -88,6 +97,9 @@ class TransactionItem {
       startDate: map['startDate'] ?? '',
       paidMonths: map['paidMonths'] ?? 0,
       lastPaymentDate: map['lastPaymentDate'] ?? '',
+      collateralItem: map['collateralItem'] ?? '',
+      collateralQuantity: map['collateralQuantity'] ?? '',
+      collateralMarketValue: (map['collateralMarketValue'] as num?)?.toDouble() ?? 0.0,
       note: map['note'] ?? '',
     );
   }
@@ -107,7 +119,7 @@ class DBHelper {
   }
 
   Future<Database> _initDB() async {
-    String path = join(await getDatabasesPath(), 'profittrack_v4.db');
+    String path = join(await getDatabasesPath(), 'profittrack_v5.db');
     return await openDatabase(
       path,
       version: 1,
@@ -123,6 +135,9 @@ class DBHelper {
             startDate TEXT,
             paidMonths INTEGER,
             lastPaymentDate TEXT,
+            collateralItem TEXT,
+            collateralQuantity TEXT,
+            collateralMarketValue REAL,
             note TEXT
           )
         ''');
