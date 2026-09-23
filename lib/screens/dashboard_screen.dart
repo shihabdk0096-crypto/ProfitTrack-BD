@@ -57,7 +57,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() {
       _filteredList = _allList.where((item) {
         final matchesQuery = item.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                             item.phone.contains(_searchQuery);
+            item.phone.contains(_searchQuery);
         final matchesStatus = _selectedFilter == "all" || item.status == _selectedFilter;
         return matchesQuery && matchesStatus;
       }).toList();
@@ -91,14 +91,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                editItem == null ? "নতুন খতিয়ান / বিনিয়োগ এন্ট্রি" : "হিসাব পরিবর্তন করুন",
+                editItem == null ? "নতুন খতিয়ান এন্ট্রি" : "হিসাব পরিবর্তন করুন",
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
               ),
               const SizedBox(height: 15),
               TextField(
                 controller: titleController,
                 decoration: const InputDecoration(
-                  labelText: "গ্রাহকের নাম / হিসাব বিবরণী *",
+                  labelText: "গ্রাহকের নাম *",
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person_outline),
                 ),
@@ -133,7 +133,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       controller: rateController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        labelText: "লাভ হার (%) *",
+                        labelText: "লাভের হার (%) *",
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.percent),
                       ),
@@ -145,7 +145,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               TextField(
                 controller: noteController,
                 decoration: const InputDecoration(
-                  labelText: "অতিরিক্ত মন্তব্য / নোট (ঐচ্ছিক)",
+                  labelText: "নোট / বিবরণ",
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.edit_note),
                 ),
@@ -241,7 +241,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text("সর্বমোট বিনিয়োগ / ব্যালেন্স", style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                    const Text("সর্বমোট বিনিয়োগ / মূলধন", style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(color: AppTheme.primary.withAlpha(40), borderRadius: BorderRadius.circular(10)),
@@ -281,7 +281,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _applyFilter();
             },
             decoration: InputDecoration(
-              hintText: "নাম বা ফোন নম্বর দিয়ে খুঁজুন...",
+              hintText: "নাম বা নম্বর দিয়ে খুঁজুন...",
               prefixIcon: const Icon(Icons.search, color: AppTheme.primary),
               filled: true,
               fillColor: AppTheme.surface,
@@ -295,7 +295,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Row(
               children: [
                 ChoiceChip(
-                  label: Text("সকল হিসাব (${_allList.length})"),
+                  label: Text("সকল (${_allList.length})"),
                   selected: _selectedFilter == "all",
                   onSelected: (val) {
                     _selectedFilter = "all";
@@ -304,7 +304,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
-                  label: const Text("চলমান (Pending)"),
+                  label: const Text("চলমান"),
                   selected: _selectedFilter == "pending",
                   selectedColor: Colors.amber.withAlpha(50),
                   onSelected: (val) {
@@ -314,7 +314,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
-                  label: const Text("পরিশোধিত (Paid)"),
+                  label: const Text("পরিশোধিত"),
                   selected: _selectedFilter == "paid",
                   selectedColor: Colors.cyanAccent.withAlpha(50),
                   onSelected: (val) {
@@ -362,8 +362,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (item.phone.isNotEmpty) Text("📞 ফোন: ${item.phone}", style: const TextStyle(color: Colors.white70)),
-                                if (item.note.isNotEmpty) Text("📝 নোট: ${item.note}", style: const TextStyle(color: Colors.white60)),
+                                if (item.phone.isNotEmpty) Text("ফোন: ${item.phone}", style: const TextStyle(color: Colors.white70)),
+                                if (item.note.isNotEmpty) Text("নোট: ${item.note}", style: const TextStyle(color: Colors.white60)),
                                 const SizedBox(height: 8),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
@@ -433,7 +433,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
             selectedIcon: Icon(Icons.account_balance_wallet, color: AppTheme.primary),
-            label: "খতিয়ান ও লেজার",
+            label: "খতিয়ান",
           ),
           NavigationDestination(
             icon: Icon(Icons.tune_outlined),
